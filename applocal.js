@@ -1,54 +1,22 @@
-var restify = require('restify');
 var builder = require('botbuilder');
-var logging = require('bot-fmk-logging');
 
-//=========================================================
-// Bot Setup
-//=========================================================
-
-// Setup Restify Server
-var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
-});
-  
-// Create chat bot
-var connector = new builder.ChatConnector({
-    appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
-});
+// Create bot and bind to console
+var connector = new builder.ConsoleConnector().listen();
 var bot = new builder.UniversalBot(connector);
-logging.monitor(bot, { transactions: [
-    {
-        intent: 'alarm.set',
-        test: /^(Creating alarm named)/i
-    }
-]});
-
-server.post('/api/messages', connector.listen());
-
-//=========================================================
-// Bots Dialogs
-//=========================================================
 
 // Create LUIS recognizer that points at our model and add it as the root '/' dialog for our Cortana Bot.
-var model = 'https://api.projectoxford.ai/luis/v1/application?id=0a2cc164-5a19-47b7-b85e-41914d9037ba&subscription-key=d7b46a6c72bf46c1b67f2c4f21acf960&q=';
+var model = 'https://api.projectoxford.ai/luis/v1/application?id=c413b2ef-382c-45bd-8ff0-f76d60e2a821&subscription-key=d7b46a6c72bf46c1b67f2c4f21acf960&q=';
 var recognizer = new builder.LuisRecognizer(model);
 var dialog = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', dialog);
 
-
 // Add intent handlers
 // Add intent handlers
-dialog.matches('alarm.set', [
+dialog.matches('builtin.intent.alarm.set_alarm', [
     function (session, args, next) {
-
-        console.log('setting alarm...');
-
         // Resolve and store any entities passed from LUIS.
-        var title = builder.EntityRecognizer.findEntity(args.entities, 'AlarmName');
-        var timeEntity = builder.EntityRecognizer.recognizeTime(session.message.text);
-        var time = timeEntity && builder.EntityRecognizer.resolveTime([timeEntity]);
+        var title = builder.EntityRecognizer.findEntity(args.entities, 'builtin.alarm.title');
+        var time = builder.EntityRecognizer.resolveTime(args.entities);
         var alarm = session.dialogData.alarm = {
           title: title ? title.entity : null,
           timestamp: time ? time.getTime() : null  
@@ -90,9 +58,6 @@ dialog.matches('alarm.set', [
             // Send confirmation to user
             var date = new Date(alarm.timestamp);
             var isAM = date.getHours() < 12;
-    
-            console.log('alarm set!');
-    
             session.send('Creating alarm named "%s" for %d/%d/%d %d:%02d%s',
                 alarm.title,
                 date.getMonth() + 1, date.getDate(), date.getFullYear(),
@@ -103,11 +68,11 @@ dialog.matches('alarm.set', [
     }
 ]);
 
-dialog.matches('alarm.delete', [
+dialog.matches('builtin.intent.alarm.delete_alarm', [
     function (session, args, next) {
         // Resolve entities passed from LUIS.
         var title;
-        var entity = builder.EntityRecognizer.findEntity(args.entities, 'AlarmName');
+        var entity = builder.EntityRecognizer.findEntity(args.entities, 'builtin.alarm.title');
         if (entity) {
             // Verify its in our set of alarms.
             title = builder.EntityRecognizer.findBestMatch(alarms, entity.entity);
