@@ -1,7 +1,7 @@
 {
-  "name": "bot",
+  "name": "bot-with-instrumentation",
   "version": "1.0.0",
-  "description": "",
+  "description": "An example on how to use botbuilder-instrumentation",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "botbuilder-instrumentation": "CatalystCode/botbuilder-instrumentation",
+    "botbuilder-instrumentation": "^1.0.1",
     "botbuilder": "3.7.0",
     "lodash": "^4.17.2",
     "request": "^2.79.0",

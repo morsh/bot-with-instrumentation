@@ -18,12 +18,18 @@ var connector = new builder.ChatConnector({
     appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 var bot = new builder.UniversalBot(connector);
-logging.monitor(bot, { transactions: [
+
+// Setting up advanced instrumentation
+logging.monitor(bot, { 
+  instrumentationKey: process.env.APPINSIGHTS_INSTRUMENTATIONKEY,
+  sentimentKey: process.env.CG_SENTIMENT_KEY,
+  transactions: [
     {
         intent: 'alarm.set',
         test: /^(Creating alarm named)/i
     }
-]});
+  ]}
+);
 
 server.post('/api/messages', connector.listen());
 
