@@ -10,9 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bot-fmk-logging": "CatalystCode/bot-fmk-logging",
-    "botbuilder": "^3.7.0",
-    "botbuilder-calling": "^3.0.0",
+    "botbuilder-instrumentation": "CatalystCode/botbuilder-instrumentation",
+    "botbuilder": "3.7.0",
     "lodash": "^4.17.2",
     "request": "^2.79.0",
     "restify": "^4.1.1"
