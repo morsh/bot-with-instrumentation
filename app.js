@@ -1,6 +1,6 @@
 var restify = require('restify');
 var builder = require('botbuilder');
-var logging = require('bot-fmk-logging');
+var logging = require('botbuilder-instrumentation');
 
 //=========================================================
 // Bot Setup
