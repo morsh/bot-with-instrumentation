@@ -1,6 +1,6 @@
 var restify = require('restify');
 var builder = require('botbuilder');
-var logging = require('botbuilder-instrumentation');
+var instrumentation = require('botbuilder-instrumentation');
 
 //=========================================================
 // Bot Setup
@@ -20,16 +20,11 @@ var connector = new builder.ChatConnector({
 var bot = new builder.UniversalBot(connector);
 
 // Setting up advanced instrumentation
-logging.monitor(bot, { 
+let logging = new instrumentation.BotFrameworkInstrumentation({ 
   instrumentationKey: process.env.APPINSIGHTS_INSTRUMENTATIONKEY,
   sentimentKey: process.env.CG_SENTIMENT_KEY,
-  transactions: [
-    {
-        intent: 'alarm.set',
-        test: /^(Creating alarm named)/i
-    }
-  ]}
-);
+});
+logging.monitor(bot);
 
 server.post('/api/messages', connector.listen());
 
@@ -51,6 +46,7 @@ dialog.matches('alarm.set', [
     function (session, args, next) {
 
         console.log('setting alarm...');
+        logging.startTransaction(session, 'create alarm');
 
         // Resolve and store any entities passed from LUIS.
         var title = builder.EntityRecognizer.findEntity(args.entities, 'AlarmName');
@@ -99,6 +95,7 @@ dialog.matches('alarm.set', [
             var isAM = date.getHours() < 12;
     
             console.log('alarm set!');
+            logging.endTransaction(session, 'create alarm', true);
     
             session.send('Creating alarm named "%s" for %d/%d/%d %d:%02d%s',
                 alarm.title,
