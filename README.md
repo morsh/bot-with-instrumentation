@@ -2,7 +2,7 @@
 
 Run `npm install`
 
-Create a file called `.env` and add the following keys:
+Rename `.env.example` to just `.env` and update the keys:
 
 ```
 MICROSOFT_APP_ID=YOUR_APP_ID
