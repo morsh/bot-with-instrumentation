@@ -17,6 +17,8 @@ var instrumentationKey = process.env.APPINSIGHTS_INSTRUMENTATIONKEY || 'YOUR APP
 var sentimentKey = process.env.CG_SENTIMENT_KEY || 'YOUR LUIS KEY';
 var luisModelEndpoint = process.env.BOT_LUIS_MODEL || 'YOUR LUIS PREBUILT CORTANA ENGLISH ENDPOINT';
 
+var alarms = {};
+
 // Create bot and bind to console
 // Setup Restify Server
 var server = restify.createServer();
@@ -105,7 +107,7 @@ dialog.matches('builtin.intent.alarm.set_alarm', [
 dialog.matches('builtin.intent.alarm.delete_alarm', [
     function (session, args, next) {
         // Resolve entities passed from LUIS.
-        var title;
+        var title = null;
         var entity = builder.EntityRecognizer.findEntity(args.entities, 'builtin.alarm.title');
         if (entity) {
             // Verify its in our set of alarms.
@@ -113,7 +115,9 @@ dialog.matches('builtin.intent.alarm.delete_alarm', [
         }
 
         // Prompt for alarm name
-        if (!title) {
+        if (Object.keys(alarms).length < 1) {
+            session.send('Sorry you must create at least 1 alarm first');
+        } else if (!title) {
             builder.Prompts.choice(session, 'Which alarm would you like to delete?', alarms);
         } else {
             next({ response: title });
@@ -133,7 +137,6 @@ dialog.matches('builtin.intent.alarm.delete_alarm', [
 dialog.onDefault(builder.DialogAction.send("I'm sorry I didn't understand. I can only create & delete alarms."));
 
 // Very simple alarm scheduler
-var alarms = {};
 setInterval(function () {
     var now = new Date().getTime();
     for (var key in alarms) {
