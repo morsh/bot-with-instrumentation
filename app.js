@@ -2,10 +2,21 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var instrumentation = require('botbuilder-instrumentation');
 
-//=========================================================
-// Bot Setup
-//=========================================================
+/*-----------------------------------------------------------------------------
+This Bot demonstrates how to use an IntentDialog with a LuisRecognizer to add 
+natural language support to a bot. The example also shows how to use 
+UniversalBot.send() to push notifications to a user.
 
+For a complete walkthrough of creating this bot see the article below.
+
+    http://docs.botframework.com/builder/node/guides/understanding-natural-language/
+
+-----------------------------------------------------------------------------*/
+var instrumentationKey = process.env.APPINSIGHTS_INSTRUMENTATIONKEY || 'YOUR APP INSIGHTS KEY';
+var sentimentKey = process.env.CG_SENTIMENT_KEY || 'YOUR LUIS KEY';
+var luisModelEndpoint = process.env.BOT_LUIS_MODEL || 'YOUR LUIS PREBUILT CORTANA ENGLISH ENDPOINT';
+
+// Create bot and bind to console
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
@@ -21,37 +32,24 @@ var bot = new builder.UniversalBot(connector);
 
 // Setting up advanced instrumentation
 let logging = new instrumentation.BotFrameworkInstrumentation({ 
-  instrumentationKey: process.env.APPINSIGHTS_INSTRUMENTATIONKEY,
-  sentimentKey: process.env.CG_SENTIMENT_KEY,
+  instrumentationKey: instrumentationKey,
+  sentimentKey: sentimentKey,
 });
 logging.monitor(bot);
 
 server.post('/api/messages', connector.listen());
 
-//=========================================================
-// Bots Dialogs
-//=========================================================
-
 // Create LUIS recognizer that points at our model and add it as the root '/' dialog for our Cortana Bot.
-//var model = 'https://api.projectoxford.ai/luis/v1/application?id=0a2cc164-5a19-47b7-b85e-41914d9037ba&subscription-key=d7b46a6c72bf46c1b67f2c4f21acf960&q=';
-var model = process.env.BOT_LUIS_MODEL;
-var recognizer = new builder.LuisRecognizer(model);
+var recognizer = new builder.LuisRecognizer(luisModelEndpoint);
 var dialog = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', dialog);
 
-
 // Add intent handlers
-// Add intent handlers
-dialog.matches('alarm.set', [
+dialog.matches('builtin.intent.alarm.set_alarm', [
     function (session, args, next) {
-
-        console.log('setting alarm...');
-        logging.startTransaction(session, 'create alarm');
-
         // Resolve and store any entities passed from LUIS.
-        var title = builder.EntityRecognizer.findEntity(args.entities, 'AlarmName');
-        var timeEntity = builder.EntityRecognizer.recognizeTime(session.message.text);
-        var time = timeEntity && builder.EntityRecognizer.resolveTime([timeEntity]);
+        var title = builder.EntityRecognizer.findEntity(args.entities, 'builtin.alarm.title');
+        var time = builder.EntityRecognizer.resolveTime(args.entities);
         var alarm = session.dialogData.alarm = {
           title: title ? title.entity : null,
           timestamp: time ? time.getTime() : null  
@@ -93,10 +91,6 @@ dialog.matches('alarm.set', [
             // Send confirmation to user
             var date = new Date(alarm.timestamp);
             var isAM = date.getHours() < 12;
-    
-            console.log('alarm set!');
-            logging.endTransaction(session, 'create alarm', true);
-    
             session.send('Creating alarm named "%s" for %d/%d/%d %d:%02d%s',
                 alarm.title,
                 date.getMonth() + 1, date.getDate(), date.getFullYear(),
@@ -107,11 +101,11 @@ dialog.matches('alarm.set', [
     }
 ]);
 
-dialog.matches('alarm.delete', [
+dialog.matches('builtin.intent.alarm.delete_alarm', [
     function (session, args, next) {
         // Resolve entities passed from LUIS.
         var title;
-        var entity = builder.EntityRecognizer.findEntity(args.entities, 'AlarmName');
+        var entity = builder.EntityRecognizer.findEntity(args.entities, 'builtin.alarm.title');
         if (entity) {
             // Verify its in our set of alarms.
             title = builder.EntityRecognizer.findBestMatch(alarms, entity.entity);
