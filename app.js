@@ -1,10 +1,11 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var instrumentation = require('botbuilder-instrumentation');
+require('dotenv').config()
 
 /*-----------------------------------------------------------------------------
-This Bot demonstrates how to use an IntentDialog with a LuisRecognizer to add 
-natural language support to a bot. The example also shows how to use 
+This Bot demonstrates how to use an IntentDialog with a LuisRecognizer to add
+natural language support to a bot. The example also shows how to use
 UniversalBot.send() to push notifications to a user.
 
 For a complete walkthrough of creating this bot see the article below.
@@ -20,9 +21,9 @@ var luisModelEndpoint = process.env.BOT_LUIS_MODEL || 'YOUR LUIS PREBUILT CORTAN
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
+    console.log('%s listening to %s', server.name, server.url);
 });
-  
+
 // Create chat bot
 var connector = new builder.ChatConnector({
     appId: process.env.MICROSOFT_APP_ID,
@@ -31,9 +32,9 @@ var connector = new builder.ChatConnector({
 var bot = new builder.UniversalBot(connector);
 
 // Setting up advanced instrumentation
-let logging = new instrumentation.BotFrameworkInstrumentation({ 
-  instrumentationKey: instrumentationKey,
-  sentimentKey: sentimentKey,
+let logging = new instrumentation.BotFrameworkInstrumentation({
+    instrumentationKey: instrumentationKey,
+    sentimentKey: sentimentKey,
 });
 logging.monitor(bot);
 
@@ -51,10 +52,10 @@ dialog.matches('builtin.intent.alarm.set_alarm', [
         var title = builder.EntityRecognizer.findEntity(args.entities, 'builtin.alarm.title');
         var time = builder.EntityRecognizer.resolveTime(args.entities);
         var alarm = session.dialogData.alarm = {
-          title: title ? title.entity : null,
-          timestamp: time ? time.getTime() : null  
+            title: title ? title.entity : null,
+            timestamp: time ? time.getTime() : null
         };
-        
+
         // Prompt for title
         if (!alarm.title) {
             builder.Prompts.text(session, 'What would you like to call your alarm?');
@@ -81,13 +82,13 @@ dialog.matches('builtin.intent.alarm.set_alarm', [
             var time = builder.EntityRecognizer.resolveTime([results.response]);
             alarm.timestamp = time ? time.getTime() : null;
         }
-        
+
         // Set the alarm (if title or timestamp is blank the user said cancel)
         if (alarm.title && alarm.timestamp) {
             // Save address of who to notify and write to scheduler.
             alarm.address = session.message.address;
             alarms[alarm.title] = alarm;
-            
+
             // Send confirmation to user
             var date = new Date(alarm.timestamp);
             var isAM = date.getHours() < 12;
@@ -110,7 +111,7 @@ dialog.matches('builtin.intent.alarm.delete_alarm', [
             // Verify its in our set of alarms.
             title = builder.EntityRecognizer.findBestMatch(alarms, entity.entity);
         }
-        
+
         // Prompt for alarm name
         if (!title) {
             builder.Prompts.choice(session, 'Which alarm would you like to delete?', alarms);
