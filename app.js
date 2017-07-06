@@ -23,6 +23,9 @@ var bot = new builder.UniversalBot(connector);
 let logging = new instrumentation.BotFrameworkInstrumentation({ 
   instrumentationKey: process.env.APPINSIGHTS_INSTRUMENTATIONKEY,
   sentimentKey: process.env.CG_SENTIMENT_KEY,
+  customFields: {
+    dialogData: [ 'BotBuilder.Data.Intent' ]
+  }
 });
 logging.monitor(bot);
 
@@ -45,6 +48,8 @@ bot.dialog('/', dialog);
 dialog.matches('alarm.set', [
     function (session, args, next) {
 
+        logging.trackCustomEvent('Try.This', { prop: 'val' }, session);
+        logging.trackEvent({ prop: 'val' }, session);
         console.log('setting alarm...');
         logging.startTransaction(session, 'create alarm');
 
