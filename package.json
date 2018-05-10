@@ -10,10 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "botbuilder": "3.7.0",
-    "botbuilder-instrumentation": "^1.1.12",
-    "lodash": "^4.17.2",
-    "request": "^2.79.0",
-    "restify": "^4.1.1"
+    "botbuilder": "^3.15.0",
+    "botbuilder-instrumentation": "^1.1.18",
+    "lodash": "^4.17.10",
+    "request": "^2.85.0",
+    "restify": "^7.1.1"
   }
 }
